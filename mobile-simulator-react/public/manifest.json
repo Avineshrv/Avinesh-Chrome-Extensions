@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "Mobile Viewport Simulator (React)",
+  "version": "1.0",
+  "description": "Simulates mobile viewports and native iOS/Android keyboards inside a Side Panel workspace (React version).",
+  "permissions": [
+    "declarativeNetRequest",
+    "sidePanel",
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "panel.html"
+  },
+  "action": {
+    "default_title": "Open Mobile Simulator"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "all_frames": true,
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content-main.js"],
+      "all_frames": true,
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
+  ]
+}

@@ -1,0 +1,1735 @@
+:root {
+  /* Premium Light Theme Colors */
+  --bg-main: #f4f5f6;
+  --bg-panel: #ffffff;
+  --text-primary: #1c1c1e;
+  --text-secondary: #8e8e93;
+  --border-color: #e5e5ea;
+  --accent-color: #007aff;
+  --control-hover: #f2f2f7;
+  
+  /* Keyboard iOS Styles */
+  --keyboard-bg-ios: rgba(209, 211, 217, 0.85);
+  --key-bg-ios: #ffffff;
+  --key-bg-ios-active: #c5c7cc;
+  --key-bg-ios-special: #aaadb6;
+  --key-text-ios: #000000;
+  
+  /* Keyboard Android Styles */
+  --keyboard-bg-android: #f1f3f4;
+  --key-bg-android: #ffffff;
+  --key-bg-android-special: #dadce0;
+  --key-text-android: #3c4043;
+  --key-ripple-android: rgba(60, 64, 67, 0.15);
+  
+  /* Emulator Dimensions */
+  --bezel-width: 12px;
+  --bezel-color: #1a1a1a;
+  
+  /* Device Dimensions */
+  --device-w-iphone: 393px;
+  --device-h-iphone: 852px;
+  --device-w-pixel: 412px;
+  --device-h-pixel: 892px;
+  --keyboard-height: 290px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-main: #0c0c0e;
+    --bg-panel: #1c1c1e;
+    --text-primary: #f2f2f7;
+    --text-secondary: #aeaeb2;
+    --border-color: #2c2c2e;
+    --accent-color: #0a84ff;
+    --control-hover: #2c2c2e;
+    
+    /* Keyboard iOS Dark Styles */
+    --keyboard-bg-ios: rgba(43, 43, 44, 0.85);
+    --key-bg-ios: #636366;
+    --key-bg-ios-active: #3a3a3c;
+    --key-bg-ios-special: #3a3a3c;
+    --key-text-ios: #ffffff;
+    
+    /* Keyboard Android Dark Styles */
+    --keyboard-bg-android: #1f2023;
+    --key-bg-android: #303134;
+    --key-bg-android-special: #3c4043;
+    --key-text-android: #e8eaed;
+    --key-ripple-android: rgba(232, 234, 237, 0.15);
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  /* Hide scrollbars globally */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide scrollbars for Chrome, Safari, and Opera */
+::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+#root {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+/* --- Premium Control Bar --- */
+#control-bar {
+  background-color: var(--bg-panel);
+  border-bottom: 1px solid var(--border-color);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  z-index: 10;
+}
+
+.controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.controls-left, .controls-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+select, input, button {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
+}
+
+/* Custom Modern Dropdown Component */
+.custom-dropdown-container {
+  position: relative;
+  display: inline-block;
+  z-index: 100;
+}
+
+.custom-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--bg-panel);
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 175px;
+  text-align: left;
+  justify-content: space-between;
+}
+
+.custom-dropdown-trigger:hover {
+  background-color: var(--control-hover);
+  border-color: var(--text-secondary);
+}
+
+.custom-dropdown-trigger.open {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+
+.device-brand-icon, .item-brand-icon {
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chevron-arrow {
+  font-size: 10px;
+  color: var(--text-secondary);
+  opacity: 0.8;
+  margin-left: auto;
+}
+
+.custom-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  min-width: 215px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 280px;
+  overflow-y: auto;
+  animation: dropdownFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.custom-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.custom-dropdown-item:hover {
+  background-color: var(--control-hover);
+}
+
+.custom-dropdown-item.active {
+  background-color: rgba(0, 122, 255, 0.08);
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+  .custom-dropdown-item.active {
+    background-color: rgba(10, 132, 255, 0.15);
+    color: #0a84ff;
+  }
+}
+
+.item-name {
+  flex-grow: 1;
+}
+
+.check-indicator {
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--accent-color);
+}
+
+.mode-toggles {
+  display: flex;
+  background-color: var(--control-hover);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.mode-toggles button {
+  border: none;
+  background: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.mode-toggles button.active {
+  background-color: var(--bg-panel);
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.orientation-toggles {
+  display: flex;
+  background-color: var(--control-hover);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.orientation-toggles button {
+  border: none;
+  background: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.orientation-toggles button.active {
+  background-color: var(--bg-panel);
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* URL Bar styling */
+.url-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-panel);
+  color: var(--text-primary);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.nav-btn:hover {
+  background-color: var(--control-hover);
+}
+
+.url-bar input {
+  flex-grow: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--control-hover);
+  color: var(--text-primary);
+  transition: all 0.2s;
+}
+
+.url-bar input:focus {
+  background-color: var(--bg-panel);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+
+#btn-go {
+  background-color: var(--accent-color);
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 122, 255, 0.2);
+}
+
+#btn-go:hover {
+  opacity: 0.9;
+}
+
+/* --- Emulator Main Frame --- */
+#emulator-main {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  padding: 15px;
+  position: relative;
+}
+
+#device-scale-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1), height 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* --- Physical Device Chassis CSS --- */
+#device-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4),
+              inset 0 0 4px rgba(255, 255, 255, 0.25);
+  transform-origin: top left;
+  transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+              height 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+              border-radius 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* iPhone 16 Pro / Pro Max desert titanium brushed frame */
+#device-wrapper.iphone-16-pro,
+#device-wrapper.iphone-16-pro-max {
+  background: linear-gradient(135deg, #2b2621 0%, #4d443a 50%, #2b2621 100%);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5),
+              0 0 0 2.5px #594e43,
+              inset 0 0 3px rgba(255, 255, 255, 0.15);
+}
+
+/* iPhone 16 standard aluminum frame */
+#device-wrapper.iphone-16 {
+  background: linear-gradient(135deg, #1f2022 0%, #3e3f42 50%, #1f2022 100%);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5),
+              0 0 0 2.5px #4f5052,
+              inset 0 0 3px rgba(255, 255, 255, 0.15);
+}
+
+/* iPhone 15 Pro / Pro Max natural titanium brushed frame */
+#device-wrapper.iphone-15-pro,
+#device-wrapper.iphone-15-pro-max {
+  background: linear-gradient(135deg, #2a2b2c 0%, #4f5052 50%, #2a2b2c 100%);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5),
+              0 0 0 2.5px #5c5d5e,
+              inset 0 0 3px rgba(255, 255, 255, 0.15);
+}
+
+/* iPhone X premium silver/black steel frame */
+#device-wrapper.iphone-x {
+  background: linear-gradient(135deg, #4f5052 0%, #8e9094 50%, #4f5052 100%);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5),
+              0 0 0 2.5px #a1a3a6,
+              inset 0 0 3px rgba(255, 255, 255, 0.15);
+}
+
+/* iPhone 13 premium space gray frame */
+#device-wrapper.iphone-13 {
+  background: linear-gradient(135deg, #1f2022 0%, #3e3f42 50%, #1f2022 100%);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5),
+              0 0 0 2.5px #4f5052,
+              inset 0 0 3px rgba(255, 255, 255, 0.15);
+}
+
+/* Pixel 9 / Pro / Pro XL obsidian black sleek frame */
+#device-wrapper.pixel-9,
+#device-wrapper.pixel-9-pro,
+#device-wrapper.pixel-9-pro-xl {
+  background: linear-gradient(135deg, #18191a 0%, #303133 50%, #18191a 100%);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5),
+              0 0 0 2.5px #3a3b3c,
+              inset 0 0 3px rgba(255, 255, 255, 0.15);
+}
+
+/* Galaxy S24 Ultra titanium gray boxy frame */
+#device-wrapper.galaxy-s24-ultra {
+  background: linear-gradient(135deg, #252627 0%, #434447 50%, #252627 100%);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5),
+              0 0 0 2.5px #505154,
+              inset 0 0 2.5px rgba(255, 255, 255, 0.2);
+}
+
+/* Galaxy S24 / S24+ titanium silver rounded frame */
+#device-wrapper.galaxy-s24,
+#device-wrapper.galaxy-s24-plus {
+  background: linear-gradient(135deg, #3a3c3e 0%, #686b6f 50%, #3a3c3e 100%);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5),
+              0 0 0 2.5px #7a7d82,
+              inset 0 0 3px rgba(255, 255, 255, 0.15);
+}
+
+/* Physical Bezels outer ring */
+.device-bezel {
+  width: 100%;
+  height: 100%;
+  background-color: var(--bezel-color);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: padding 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+              border-radius 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Premium physical bezel overlay frame that covers all square corners, bleeds, and scaling voids */
+.device-bezel::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: var(--dynamic-bezel-width, 12px) solid var(--bezel-color, #1a1a1a);
+  border-radius: var(--dynamic-bezel-radius, 40px);
+  pointer-events: none; /* Allows clicks to pass through seamlessly to the iframe workspace */
+  z-index: 2000; /* Force it to overlay on top of all status bars, home indicators, and keyboards */
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.55); /* Stunning high-fidelity screen depth overlay shadow */
+  transition: border-width 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+              border-radius 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Viewport Container (Actual Phone Screen) */
+#viewport-container {
+  background-color: #000000; /* Sleek black screen backdrop to blend subpixel anti-aliasing seamlessly into the bezel */
+  height: 100%;
+  width: 100%;
+  overflow: hidden !important;
+  contain: paint !important; /* Force parent-level paint boundary containment to prevent any backdrop-filter or child bleeds */
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  transition: border-radius 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+#iframe-wrapper {
+  flex-grow: 1;
+  width: 100%;
+  position: relative;
+  overflow: hidden !important;
+  background-color: #ffffff;
+  transition: margin-bottom 0.28s cubic-bezier(0.1, 0.76, 0.55, 0.94);
+  /* Perfect straight alignment matching phone screen sides */
+  border-radius: 0 !important;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+}
+
+@media (prefers-color-scheme: dark) {
+  #iframe-wrapper {
+    background-color: #121212;
+  }
+}
+
+#target-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background-color: #ffffff;
+  /* Perfect straight alignment matching phone screen sides */
+  border-radius: 0 !important;
+  overflow: hidden !important;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+.status-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  pointer-events: none; /* Let clicks pass through to iframe */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  flex-shrink: 0;
+  background: #f5f5f7 !important; /* Premium light grey base */
+  color: #000000;
+  border-bottom: 1px solid #e5e5ea !important;
+  transition: color 0.3s, background 0.3s, border-color 0.3s;
+
+  /* Rely on parent #viewport-container's paint containment and overflow: hidden to clip corners perfectly without ellipse scaling mismatches */
+  border-radius: 0 !important;
+  overflow: hidden !important;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+@media (prefers-color-scheme: dark) {
+  .status-bar {
+    background: #1c1c1e !important; /* Slightly lighter than pure black so notches/cameras are clearly visible */
+    color: #ffffff;
+    border-bottom: 1px solid #2c2c2e !important;
+  }
+}
+
+.status-bar.landscape {
+  padding: 0 40px;
+}
+
+.status-bar .status-icons {
+  display: flex;
+  align-items: center;
+}
+
+.status-bar .status-svg {
+  display: inline-block;
+  vertical-align: middle;
+  fill: currentColor;
+}
+
+/* --- Apple High-Fidelity Status Bar --- */
+.apple-status-bar {
+  height: 42px;
+  padding: 0 22px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+}
+
+.apple-status-bar .status-icons {
+  gap: 6px;
+}
+
+/* --- Samsung High-Fidelity Status Bar --- */
+.samsung-status-bar {
+  height: 36px;
+  padding: 0 16px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.samsung-status-bar .status-icons {
+  gap: 5px;
+}
+
+.samsung-volte-badge {
+  font-size: 8px;
+  font-weight: 800;
+  border: 1px solid currentColor;
+  padding: 0.5px 3.5px;
+  border-radius: 3px;
+  line-height: 1;
+  font-family: inherit;
+  margin-right: 2px;
+  opacity: 0.95;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.samsung-battery-icon text {
+  font-weight: 900;
+}
+
+/* --- Pixel High-Fidelity Status Bar --- */
+.pixel-status-bar {
+  height: 38px;
+  padding: 0 18px;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.pixel-status-bar .status-icons {
+  gap: 6px;
+}
+
+.pixel-network-badge {
+  font-size: 9px;
+  font-weight: 800;
+  margin-right: 2px;
+  opacity: 0.95;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.pixel-battery-icon {
+  margin-left: 2px;
+}
+
+/* iOS Specific Styles */
+body.ios-mode .android-nav-bar {
+  display: none !important;
+}
+
+body.ios-mode .ios-home-indicator {
+  display: flex;
+}
+
+.dynamic-island-container.portrait {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 150;
+}
+
+.dynamic-island-container.landscape {
+  position: absolute;
+  left: 7px; /* Matches the 7px visual margin from the left edge */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 110px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  z-index: 150;
+}
+
+.dynamic-island {
+  width: 110px;
+  height: 30px;
+  background-color: #000000;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 12px;
+  box-shadow: inset 0 0 4px rgba(255,255,255,0.2);
+}
+
+.dynamic-island-container.portrait .dynamic-island {
+  margin-top: 7px;
+}
+
+.dynamic-island-container.landscape .dynamic-island {
+  width: 30px;
+  height: 110px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin-top: 0;
+}
+
+.camera-lens {
+  width: 9px;
+  height: 9px;
+  background: radial-gradient(circle, #0e1118 20%, #030406 80%);
+  border-radius: 50%;
+  box-shadow: 0 0 1px rgba(255,255,255,0.3);
+}
+
+/* iPhone Notch Portrait Styles */
+.iphone-notch-container.portrait {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 150;
+}
+
+.iphone-notch-container.portrait .iphone-notch {
+  width: 200px;
+  height: 30px;
+  background-color: #000000;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.iphone-notch-container.portrait .iphone-notch-narrow {
+  width: 140px;
+  height: 28px;
+  background-color: #000000;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* iPhone Notch Landscape Styles */
+.iphone-notch-container.landscape {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  pointer-events: none;
+  z-index: 150;
+}
+
+.iphone-notch-container.landscape .iphone-notch {
+  width: 30px;
+  height: 200px;
+  background-color: #000000;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.iphone-notch-container.landscape .iphone-notch-narrow {
+  width: 28px;
+  height: 140px;
+  background-color: #000000;
+  border-top-right-radius: 16px;
+  border-bottom-right-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Notch Physical Mesh Speakers */
+.speaker-earpiece {
+  width: 50px;
+  height: 3px;
+  background-color: #222;
+  border-radius: 1.5px;
+  box-shadow: inset 0 0 1px rgba(255,255,255,0.2);
+}
+
+.speaker-earpiece-narrow {
+  width: 40px;
+  height: 2.5px;
+  background-color: #222;
+  border-radius: 1.2px;
+  box-shadow: inset 0 0 1px rgba(255,255,255,0.2);
+}
+
+.iphone-notch-container.landscape .speaker-earpiece {
+  width: 3px;
+  height: 50px;
+}
+
+.iphone-notch-container.landscape .speaker-earpiece-narrow {
+  width: 2.5px;
+  height: 40px;
+}
+
+/* Android Specific Styles */
+body.android-mode .ios-home-indicator {
+  display: none !important;
+}
+
+body.android-mode .android-nav-bar {
+  display: flex;
+}
+
+.camera-punch-container.portrait {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 150;
+}
+
+.camera-punch-container.landscape {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 13px;
+  height: 13px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  z-index: 150;
+}
+
+.camera-punch {
+  width: 13px;
+  height: 13px;
+  background-color: #000000;
+  border-radius: 50%;
+  box-shadow: inset 0 0 2px rgba(255,255,255,0.2);
+}
+
+.camera-punch-container.portrait .camera-punch {
+  margin-top: 10px;
+}
+
+.camera-punch-container.landscape .camera-punch {
+  margin-top: 0;
+}
+
+/* --- Soft Home Indicators --- */
+.home-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  pointer-events: none; /* Clicks pass through */
+  height: 24px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  flex-shrink: 0;
+  background: #f5f5f7 !important; /* Premium light grey base */
+  border-top: 1px solid #e5e5ea !important;
+  transition: background 0.3s, border-color 0.3s;
+
+  /* Rely on parent #viewport-container's paint containment and overflow: hidden to clip corners perfectly without ellipse scaling mismatches */
+  border-radius: 0 !important;
+  overflow: hidden !important;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+.home-indicator * {
+  pointer-events: auto; /* Re-enable pointer events for buttons themselves */
+}
+
+@media (prefers-color-scheme: dark) {
+  .home-indicator {
+    background: #1c1c1e !important; /* Slightly lighter than pure black to stand out */
+    border-top: 1px solid #2c2c2e !important;
+  }
+}
+
+/* iOS Home Indicator Pill Bar */
+.ios-home-indicator {
+  height: 20px;
+}
+
+.home-bar {
+  width: 120px;
+  height: 4px;
+  background-color: #000000;
+  border-radius: 2px;
+  transition: background-color 0.2s;
+}
+
+@media (prefers-color-scheme: dark) {
+  .home-bar {
+    background-color: #ffffff;
+  }
+}
+
+/* Android 3-Button Soft Keys Nav Bar */
+.android-nav-bar {
+  height: 42px;
+  border-top: none !important;
+  display: flex;
+  justify-content: space-around;
+  padding: 0 60px;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.nav-key {
+  border: none;
+  background: none;
+  font-size: 16px;
+  color: #5f6368;
+  cursor: pointer;
+  width: 44px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.nav-key:hover {
+  background-color: rgba(0,0,0,0.05);
+}
+
+.nav-key:active {
+  background-color: rgba(0,0,0,0.1);
+}
+
+/* --- HIGH-FIDELITY GENERATIVE KEYBOARDS --- */
+#virtual-keyboard {
+  width: 100%;
+  height: var(--keyboard-height);
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+  transition: transform 0.28s cubic-bezier(0.1, 0.76, 0.55, 0.94), opacity 0.2s;
+  /* Perfect clipping for virtual keyboard corners at the bottom of the device */
+  border-bottom-left-radius: inherit !important;
+  border-bottom-right-radius: inherit !important;
+  overflow: hidden !important;
+}
+
+#virtual-keyboard.keyboard-hidden {
+  transform: translateY(100%);
+  display: none !important;
+}
+
+.keyboard-header {
+  height: 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  font-size: 11px;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+#btn-close-keyboard {
+  background: none;
+  border: none;
+  font-size: 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.keyboard-keys {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 6px;
+  flex-grow: 1;
+  justify-content: space-between;
+}
+
+.key-row {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.key {
+  flex-grow: 1;
+  flex-basis: 0;
+  height: 42px;
+  border: none;
+  font-size: 17px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.1s, transform 0.1s;
+}
+
+/* --- iOS Visual Styling (Frosted Glass & Depth) --- */
+body.ios-mode #virtual-keyboard {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background-color: var(--keyboard-bg-ios);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  padding-bottom: 22px; /* iOS home indicator pad spacing */
+  height: calc(var(--keyboard-height) + 20px);
+}
+
+/* Pushes the bottom of the iframe up to prevent keyboard overlay overlap on fixed/bottom inputs */
+body.ios-mode.keyboard-open #iframe-wrapper {
+  margin-bottom: calc(var(--keyboard-height) + 20px);
+}
+
+body.ios-mode .keyboard-header {
+  color: var(--key-text-ios);
+  opacity: 0.6;
+}
+
+body.ios-mode .key {
+  background-color: var(--key-bg-ios);
+  color: var(--key-text-ios);
+  border-radius: 5px;
+  box-shadow: 0 1.2px 0 rgba(0,0,0,0.35);
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* iOS active tactile magnifier popup bubble */
+body.ios-mode .key:not(.special-key):active {
+  background-color: var(--key-bg-ios-active) !important;
+  z-index: 100;
+}
+
+body.ios-mode .key:not(.special-key):active::after {
+  content: attr(data-char);
+  position: absolute;
+  top: -55px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 62px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+  color: #000000;
+  font-size: 28px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  pointer-events: none;
+  border: 1px solid rgba(0,0,0,0.1);
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  body.ios-mode .key:not(.special-key):active::after {
+    background: #3a3a3c;
+    color: #ffffff;
+    border-color: rgba(255,255,255,0.1);
+  }
+}
+
+/* iOS Function Keys (Shift, Backspace, 123, return) */
+body.ios-mode .key.special-key {
+  background-color: var(--key-bg-ios-special);
+}
+
+body.ios-mode .key.space-key {
+  flex-grow: 5.5;
+}
+
+body.ios-mode .key.action-key {
+  flex-grow: 1.5;
+  font-size: 13px;
+}
+
+body.ios-mode .key.active-shift {
+  background-color: #ffffff !important;
+  color: #007aff !important;
+}
+
+body.ios-mode .key.enter-key {
+  background-color: #007aff !important;
+  color: #ffffff !important;
+  box-shadow: 0 1.2px 0 rgba(0,0,70,0.35);
+}
+
+body.ios-mode .key.enter-key:active {
+  background-color: #005ecb !important;
+}
+
+/* Hide normal indicator bar when keyboard is open in iOS because bottom space is occupied */
+body.ios-mode.keyboard-open .ios-home-indicator {
+  display: none !important;
+}
+
+/* --- Android Visual Styling (Flat Material Design Gboard) --- */
+body.android-mode #virtual-keyboard {
+  position: relative;
+  background-color: var(--keyboard-bg-android);
+  border-top: 1px solid var(--border-color);
+  padding: 6px 4px;
+}
+
+body.android-mode .keyboard-header {
+  color: var(--key-text-android);
+  opacity: 0.7;
+}
+
+body.android-mode .key {
+  background-color: var(--key-bg-android);
+  color: var(--key-text-android);
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.12);
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  height: 44px;
+}
+
+/* Gboard card details overlays */
+.gboard-key-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.gboard-key-primary {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.gboard-key-secondary {
+  position: absolute;
+  top: 1px;
+  right: 3px;
+  font-size: 8px;
+  color: var(--text-secondary);
+  opacity: 0.65;
+  font-weight: normal;
+}
+
+/* Android tap feedback */
+body.android-mode .key:active {
+  background-color: var(--key-ripple-android) !important;
+}
+
+/* Android Function Keys */
+body.android-mode .key.special-key {
+  background-color: var(--key-bg-android-special);
+}
+
+body.android-mode .key.space-key {
+  flex-grow: 5.5;
+  font-size: 13px;
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+body.android-mode .key.action-key {
+  flex-grow: 1.5;
+  font-size: 13px;
+}
+
+body.android-mode .key.active-shift {
+  background-color: #e8f0fe !important;
+  color: #1a73e8 !important;
+}
+
+/* Gboard Google blue enter button */
+body.android-mode .key.enter-key {
+  background-color: #1a73e8 !important;
+  color: #ffffff !important;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+body.android-mode .key.enter-key:active {
+  background-color: #1557b0 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  body.android-mode .key.enter-key {
+    background-color: #8ab4f8 !important;
+    color: #202124 !important;
+  }
+  body.android-mode .key.enter-key:active {
+    background-color: #aecbfa !important;
+  }
+}
+
+/* Hide soft keys navbar when Gboard is open in Android (Standard Android behavior) */
+body.android-mode.keyboard-open .android-nav-bar {
+  display: none !important;
+}
+
+/* Android Viewport height shift reflow! */
+body.android-mode.keyboard-open #iframe-wrapper {
+  /* Flexbox makes this happen automatically since #virtual-keyboard sits in flex container, 
+     but adding explicit transitions makes the reflow appear premium */
+  transition: all 0.28s cubic-bezier(0.1, 0.76, 0.55, 0.94);
+}
+
+/* --- Diagnostic / Debug Bar --- */
+#diagnostic-bar {
+  background-color: var(--bg-panel);
+  border-top: 1px solid var(--border-color);
+  padding: 8px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  font-size: 12px;
+  user-select: none;
+}
+
+.status-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.status-value {
+  color: #34c759;
+  font-weight: 600;
+}
+
+#diagnostic-bar button {
+  background-color: var(--control-hover);
+  border: 1px solid var(--border-color);
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+#diagnostic-bar button:hover {
+  background-color: var(--border-color);
+}
+
+/* Sound Toggle button icon states */
+#btn-sound-toggle.sound-muted {
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+  background-color: var(--bg-panel);
+}
+
+#btn-sound-toggle.sound-muted .sound-icon {
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+
+/* --- High-Fidelity Glassmorphic Instructions Modal --- */
+.instructions-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 5000;
+  animation: modalFadeIn 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.instructions-modal {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 460px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.instructions-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.instructions-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.instructions-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.instructions-close:hover {
+  color: var(--text-primary);
+}
+
+.instructions-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.instruction-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.instruction-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: var(--control-hover);
+  border-radius: 10px;
+}
+
+.instruction-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.instruction-text h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.instruction-text p {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.instructions-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  background-color: var(--control-hover);
+}
+
+.btn-close-modal {
+  background-color: var(--accent-color);
+  color: #ffffff;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 122, 255, 0.2);
+  transition: opacity 0.15s;
+}
+
+.btn-close-modal:hover {
+  opacity: 0.9;
+}
+
+#btn-instructions {
+  background-color: var(--accent-color) !important;
+  color: #ffffff !important;
+  border: none !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 6px rgba(0, 122, 255, 0.2);
+}
+
+#btn-instructions:hover {
+  opacity: 0.9;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* --- High-Fidelity Keyboard Theme Overrides --- */
+
+/* Light Theme Variables */
+#virtual-keyboard.theme-light {
+  --keyboard-bg-ios: rgba(209, 211, 217, 0.96);
+  --key-bg-ios: #ffffff;
+  --key-bg-ios-active: #c5c7cc;
+  --key-bg-ios-special: #aaadb6;
+  --key-text-ios: #000000;
+  
+  --keyboard-bg-android: #f1f3f4;
+  --key-bg-android: #ffffff;
+  --key-bg-android-special: #dadce0;
+  --key-text-android: #3c4043;
+}
+
+/* Dark Theme Variables */
+#virtual-keyboard.theme-dark {
+  --keyboard-bg-ios: rgba(43, 43, 44, 0.96);
+  --key-bg-ios: #636366;
+  --key-bg-ios-active: #3a3a3c;
+  --key-bg-ios-special: #3a3a3c;
+  --key-text-ios: #ffffff;
+  
+  --keyboard-bg-android: #1f2023;
+  --key-bg-android: #303134;
+  --key-bg-android-special: #3c4043;
+  --key-text-android: #e8eaed;
+}
+
+/* Night Theme Variables (Pitch Black AMOLED) */
+#virtual-keyboard.theme-night {
+  --keyboard-bg-ios: rgba(10, 10, 10, 0.98);
+  --key-bg-ios: #2c2c2e;
+  --key-bg-ios-active: #1c1c1e;
+  --key-bg-ios-special: #1c1c1e;
+  --key-text-ios: #ffffff;
+  
+  --keyboard-bg-android: #000000;
+  --key-bg-android: #1c1c1e;
+  --key-bg-android-special: #121212;
+  --key-text-android: #ffffff;
+}
+
+/* Make sure active caps shift is white in dark themes */
+#virtual-keyboard.theme-dark .key.active-shift,
+#virtual-keyboard.theme-night .key.active-shift {
+  background-color: #ffffff !important;
+  color: #007aff !important;
+}
+
+/* Height adjustments to cleanly accommodate the prediction bar and accessories row */
+body.ios-mode #virtual-keyboard {
+  height: calc(var(--keyboard-height) + 56px) !important;
+}
+
+body.ios-mode.keyboard-open #iframe-wrapper {
+  margin-bottom: calc(var(--keyboard-height) + 56px) !important;
+}
+
+body.android-mode #virtual-keyboard {
+  height: calc(var(--keyboard-height) + 38px) !important;
+}
+
+/* --- High-Fidelity Keyboard Prediction Bar --- */
+.keyboard-prediction-bar {
+  display: flex;
+  height: 38px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background-color: transparent;
+  user-select: none;
+}
+
+#virtual-keyboard.theme-dark .keyboard-prediction-bar,
+#virtual-keyboard.theme-night .keyboard-prediction-bar {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.prediction-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: var(--key-text-ios);
+  font-family: inherit;
+  transition: background-color 0.1s;
+}
+
+#virtual-keyboard.theme-light .prediction-item {
+  color: #000000;
+}
+
+#virtual-keyboard.theme-dark .prediction-item,
+#virtual-keyboard.theme-night .prediction-item {
+  color: #ffffff;
+}
+
+.prediction-item:not(:last-child) {
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+#virtual-keyboard.theme-dark .prediction-item:not(:last-child),
+#virtual-keyboard.theme-night .prediction-item:not(:last-child) {
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.prediction-item:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+#virtual-keyboard.theme-dark .prediction-item:hover,
+#virtual-keyboard.theme-night .prediction-item:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* --- iOS Keyboard Bottom Accessories Bezel Row --- */
+.ios-keyboard-bottom-accessories {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 20px 8px 20px;
+  height: 40px;
+  position: relative;
+  margin-top: 2px;
+}
+
+.ios-keyboard-bottom-accessories .accessory-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--key-text-ios);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: background-color 0.15s, transform 0.1s;
+  opacity: 0.85;
+}
+
+.ios-keyboard-bottom-accessories .accessory-btn:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+  opacity: 1;
+}
+
+#virtual-keyboard.theme-dark .ios-keyboard-bottom-accessories .accessory-btn:hover,
+#virtual-keyboard.theme-night .ios-keyboard-bottom-accessories .accessory-btn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.ios-keyboard-bottom-accessories .accessory-btn:active {
+  transform: scale(0.92);
+}
+
+.ios-bottom-space-placeholder {
+  flex-grow: 1;
+}
+
+/* --- High-Fidelity Keyboard Theme Switcher --- */
+.keyboard-theme-selector {
+  display: flex;
+  background-color: rgba(0, 0, 0, 0.06);
+  padding: 2px;
+  border-radius: 6px;
+  gap: 2px;
+}
+
+#virtual-keyboard.theme-dark .keyboard-theme-selector,
+#virtual-keyboard.theme-night .keyboard-theme-selector {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.keyboard-theme-selector .theme-btn {
+  background: none;
+  border: none;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0.7;
+}
+
+.keyboard-theme-selector .theme-btn:hover {
+  opacity: 1;
+}
+
+.keyboard-theme-selector .theme-btn.active {
+  background-color: var(--key-bg-ios) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  opacity: 1;
+}
+
+#virtual-keyboard.theme-night .keyboard-theme-selector .theme-btn.active {
+  background-color: #3a3a3c !important;
+}
+
+/* --- High-Fidelity Emoji Grid styling --- */
+.emoji-grid-container {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+  padding: 12px;
+  height: 200px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.emoji-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background-color 0.1s, transform 0.1s;
+  padding: 4px;
+}
+
+.emoji-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+#virtual-keyboard.theme-dark .emoji-btn:hover,
+#virtual-keyboard.theme-night .emoji-btn:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.emoji-btn:active {
+  transform: scale(0.9);
+}
+
+.emoji-bottom-bar {
+  display: flex;
+  padding: 8px;
+  gap: 8px;
+  background-color: var(--keyboard-bg-ios);
+}
+
+.switch-abc-btn {
+  flex-grow: 1.5;
+  font-size: 14px !important;
+  font-weight: bold;
+}
+
+.backspace-btn {
+  flex-grow: 1.5;
+}
