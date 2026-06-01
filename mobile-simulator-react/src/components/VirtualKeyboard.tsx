@@ -9,6 +9,8 @@ interface VirtualKeyboardProps {
   keyboardOpen: boolean;
   onClose: () => void;
   sendInputToFrame: (data: { char?: string | null; action?: string }) => void;
+  isPremium: boolean;
+  onPremiumTrigger?: () => void;
 }
 
 interface SpecialKey {
@@ -39,7 +41,9 @@ export const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
   setShiftActive,
   keyboardOpen,
   onClose,
-  sendInputToFrame
+  sendInputToFrame,
+  isPremium,
+  onPremiumTrigger
 }) => {
   // Local Keyboard Theme State - Default to OS prefers-color-scheme
   const [keyboardTheme, setKeyboardTheme] = useState<'light' | 'dark' | 'night'>(() => {
@@ -105,19 +109,19 @@ export const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
   };
 
   const handleKeyPress = (keyData: KeyItem) => {
+    if (!isPremium) {
+      if (onPremiumTrigger) onPremiumTrigger();
+      return;
+    }
+    
     if (typeof keyData === 'string') {
-      // Character key
       sendInputToFrame({ char: keyData });
-      
-      // Auto-clear Shift state after one letter in caps layout (iOS/Android default)
       if (shiftActive && keyboardPage === 'ABC') {
         setShiftActive(false);
         setKeyboardPage('abc');
       }
     } else {
-      // Special action/utility key
       const type = keyData.type;
-      
       if (type === 'space') {
         sendInputToFrame({ char: ' ' });
       } else if (type === 'enter') {
@@ -144,7 +148,6 @@ export const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
     }
   };
 
-  // Render tiny gray secondary sub-labels on top of Gboard keys (insanely realistic!)
   const renderAndroidKeyContent = (keyChar: string) => {
     const secondaryMap: Record<string, string> = {
       q: '1', w: '2', e: '3', r: '4', t: '5', y: '6', u: '7', i: '8', o: '9', p: '0',
@@ -163,13 +166,19 @@ export const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
   const layoutKey = `${osMode}_${keyboardPage}`;
   const layout = KEYBOARD_LAYOUTS[layoutKey] || [];
 
-  // --- Render Emoji Page ---
+  // --- Premium-only Emoji page check ---
   if (keyboardPage === 'emoji') {
+    if (!isPremium) {
+      setKeyboardPage('abc');
+      if (onPremiumTrigger) onPremiumTrigger();
+      return null;
+    }
+
     return (
       <div 
         id="virtual-keyboard" 
         className={`${keyboardOpen ? '' : 'keyboard-hidden'} theme-${keyboardTheme}`}
-        onPointerDown={(e) => e.preventDefault()} // Bypasses iframe focus stealing
+        onPointerDown={(e) => e.preventDefault()}
       >
         <div className="keyboard-header">
           <span className="keyboard-hint">Emojis</span>
@@ -211,111 +220,145 @@ export const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
   return (
     <div 
       id="virtual-keyboard" 
-      className={`${keyboardOpen ? '' : 'keyboard-hidden'} theme-${keyboardTheme}`}
-      onPointerDown={(e) => e.preventDefault()} // Bypasses iframe focus stealing
+      className={`${keyboardOpen ? '' : 'keyboard-hidden'} theme-${keyboardTheme} ${!isPremium ? 'free-keyboard-empty-layout' : ''}`}
+      onPointerDown={(e) => e.preventDefault()}
+      style={{
+        height: !isPremium ? '230px' : undefined // Set clean shorter empty layout height
+      }}
     >
       <div className="keyboard-header">
-        <span className="keyboard-hint">{osMode === 'ios' ? 'English (US)' : 'Gboard English'}</span>
+        <span className="keyboard-hint">
+          {osMode === 'ios' ? 'iOS Keyboard Layout' : 'Android Gboard Layout'} {!isPremium && '(Locked preview)'}
+        </span>
         
-        {/* Dynamic theme switcher inside keyboard header! */}
-        <div className="keyboard-theme-selector">
-          <button className={`theme-btn ${keyboardTheme === 'light' ? 'active' : ''}`} onPointerDown={() => setKeyboardTheme('light')} title="Light Theme">☀️</button>
-          <button className={`theme-btn ${keyboardTheme === 'dark' ? 'active' : ''}`} onPointerDown={() => setKeyboardTheme('dark')} title="Dark Theme">🌙</button>
-          <button className={`theme-btn ${keyboardTheme === 'night' ? 'active' : ''}`} onPointerDown={() => setKeyboardTheme('night')} title="Night Theme">🌃</button>
-        </div>
+        {isPremium && (
+          <div className="keyboard-theme-selector">
+            <button className={`theme-btn ${keyboardTheme === 'light' ? 'active' : ''}`} onPointerDown={() => setKeyboardTheme('light')} title="Light Theme">☀️</button>
+            <button className={`theme-btn ${keyboardTheme === 'dark' ? 'active' : ''}`} onPointerDown={() => setKeyboardTheme('dark')} title="Dark Theme">🌙</button>
+            <button className={`theme-btn ${keyboardTheme === 'night' ? 'active' : ''}`} onPointerDown={() => setKeyboardTheme('night')} title="Night Theme">🌃</button>
+          </div>
+        )}
         
         <button id="btn-close-keyboard" onClick={onClose} title="Close Keyboard">&#10005;</button>
       </div>
 
-      {/* Prediction Suggestion Bar */}
-      <div className="keyboard-prediction-bar">
-        <button className="prediction-item" onPointerDown={() => sendInputToFrame({ char: 'i ' })}>i</button>
-        <button className="prediction-item" onPointerDown={() => sendInputToFrame({ char: 'the ' })}>the</button>
-        <button className="prediction-item" onPointerDown={() => sendInputToFrame({ char: "i'm " })}>i'm</button>
-      </div>
-
-      <div id="keyboard-keys-container" className="keyboard-keys">
-        {layout.map((row, rIdx) => (
-          <div className="key-row" key={rIdx}>
-            {row.map((keyItem, kIdx) => {
-              if (typeof keyItem === 'string') {
-                return (
-                  <button
-                    key={kIdx}
-                    className="key"
-                    data-char={keyItem}
-                    onPointerDown={() => handleKeyPress(keyItem)}
-                  >
-                    {osMode === 'android' && keyboardPage === 'abc' 
-                      ? renderAndroidKeyContent(keyItem) 
-                      : keyItem
-                    }
-                  </button>
-                );
-              } else {
-                let extraClass = `special-key ${keyItem.type}-key`;
-                let displayLabel = keyItem.label;
-
-                if (keyItem.type === 'space') {
-                  extraClass += ' space-key';
-                  if (osMode === 'android') {
-                    displayLabel = 'English';
-                  } else {
-                    // iPhone Spacebar has blank text but a subtle 'space' or 'EN TR'
-                    displayLabel = 'space';
-                  }
-                } else if (keyItem.type === 'enter') {
-                  extraClass += ' action-key';
-                  if (osMode === 'ios') {
-                    displayLabel = 'return';
-                  } else {
-                    displayLabel = '↵'; // Gboard symbol
-                    extraClass += ' gboard-enter';
-                  }
-                } else if (keyItem.type === 'backspace') {
-                  extraClass += ' action-key';
-                } else if (keyItem.type === 'shift' || keyItem.type === 'shift-active') {
-                  extraClass += ' action-key';
-                  if (shiftActive) extraClass += ' active-shift';
-                }
-
-                return (
-                  <button
-                    key={kIdx}
-                    className={`key ${extraClass}`}
-                    onPointerDown={() => handleKeyPress(keyItem)}
-                  >
-                    {displayLabel}
-                  </button>
-                );
-              }
-            })}
+      {isPremium ? (
+        <>
+          {/* Prediction Suggestion Bar */}
+          <div className="keyboard-prediction-bar">
+            <button className="prediction-item" onPointerDown={() => sendInputToFrame({ char: 'i ' })}>i</button>
+            <button className="prediction-item" onPointerDown={() => sendInputToFrame({ char: 'the ' })}>the</button>
+            <button className="prediction-item" onPointerDown={() => sendInputToFrame({ char: "i'm " })}>i'm</button>
           </div>
-        ))}
-      </div>
 
-      {/* iPhone Keyboard Bottom accessories containing smiley emoji and microphone! */}
-      {osMode === 'ios' && (
-        <div className="ios-keyboard-bottom-accessories">
-          <button 
-            className="accessory-btn emoji-trigger" 
-            onPointerDown={() => setKeyboardPage('emoji')}
-            title="Smiley Emojis"
-          >
-            😀
-          </button>
-          <div className="ios-bottom-space-placeholder"></div>
-          <button 
-            className="accessory-btn mic-trigger"
-            onPointerDown={() => sendInputToFrame({ char: '🎤' })}
-            title="Dictation Microphone"
-          >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
-            </svg>
-          </button>
+          <div id="keyboard-keys-container" className="keyboard-keys">
+            {layout.map((row, rIdx) => (
+              <div className="key-row" key={rIdx}>
+                {row.map((keyItem, kIdx) => {
+                  if (typeof keyItem === 'string') {
+                    return (
+                      <button
+                        key={kIdx}
+                        className="key"
+                        data-char={keyItem}
+                        onPointerDown={() => handleKeyPress(keyItem)}
+                      >
+                        {osMode === 'android' && keyboardPage === 'abc' 
+                          ? renderAndroidKeyContent(keyItem) 
+                          : keyItem
+                        }
+                      </button>
+                    );
+                  } else {
+                    let extraClass = `special-key ${keyItem.type}-key`;
+                    let displayLabel = keyItem.label;
+
+                    if (keyItem.type === 'space') {
+                      extraClass += ' space-key';
+                      if (osMode === 'android') {
+                        displayLabel = 'English';
+                      } else {
+                        displayLabel = 'space';
+                      }
+                    } else if (keyItem.type === 'enter') {
+                      extraClass += ' action-key';
+                      if (osMode === 'ios') {
+                        displayLabel = 'return';
+                      } else {
+                        displayLabel = '↵';
+                        extraClass += ' gboard-enter';
+                      }
+                    } else if (keyItem.type === 'backspace') {
+                      extraClass += ' action-key';
+                    } else if (keyItem.type === 'shift' || keyItem.type === 'shift-active') {
+                      extraClass += ' action-key';
+                      if (shiftActive) extraClass += ' active-shift';
+                    }
+
+                    return (
+                      <button
+                        key={kIdx}
+                        className={`key ${extraClass}`}
+                        onPointerDown={() => handleKeyPress(keyItem)}
+                      >
+                        {displayLabel}
+                      </button>
+                    );
+                  }
+                })}
+              </div>
+            ))}
+          </div>
+
+          {osMode === 'ios' && (
+            <div className="ios-keyboard-bottom-accessories">
+              <button 
+                className="accessory-btn emoji-trigger" 
+                onPointerDown={() => setKeyboardPage('emoji')}
+                title="Smiley Emojis"
+              >
+                😀
+              </button>
+              <div className="ios-bottom-space-placeholder"></div>
+              <button 
+                className="accessory-btn mic-trigger"
+                onPointerDown={() => sendInputToFrame({ char: '🎤' })}
+                title="Dictation Microphone"
+              >
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                  <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+                </svg>
+              </button>
+            </div>
+          )}
+        </>
+      ) : (
+        /* Empty Layout preview for free users: Absolutely blank inside, showing only layout */
+        <div 
+          className="empty-layout-preview" 
+          onClick={onPremiumTrigger}
+          style={{
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            cursor: 'pointer',
+            padding: '24px',
+            gap: '12px'
+          }}
+        >
+          <div style={{ fontSize: '24px', opacity: 0.55 }}>🔒</div>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', textAlign: 'center', opacity: 0.8 }}>
+            Simulating Keyboard Layout footprint
+          </div>
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'center', opacity: 0.6, maxWidth: '240px' }}>
+            Alphanumeric keys and typing features are locked. Click anywhere here to unlock.
+          </div>
         </div>
       )}
     </div>
   );
 };
+
+export default VirtualKeyboard;

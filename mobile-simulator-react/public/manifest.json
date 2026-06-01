@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Mobile Viewport Simulator (React)",
+  "name": "Mobile Browser Simulator (With iOS & Android Keyboard)",
   "version": "1.0",
-  "description": "Simulates mobile viewports and native iOS/Android keyboards inside a Side Panel workspace (React version).",
+  "description": "Simulate mobile viewports and realistic iOS/Android keyboards directly in your Chrome Side Panel.",
   "permissions": [
     "declarativeNetRequest",
     "sidePanel",
@@ -24,14 +24,22 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
       "all_frames": true,
       "run_at": "document_start"
     },
     {
-      "matches": ["<all_urls>"],
-      "js": ["content-main.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content-main.js"
+      ],
       "all_frames": true,
       "run_at": "document_start",
       "world": "MAIN"

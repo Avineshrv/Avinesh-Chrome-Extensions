@@ -100,6 +100,10 @@
         if (activeElement) {
           activeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
+      } else if (event.data.type === 'KEYBOARD_BLUR') {
+        if (activeElement) {
+          activeElement.blur();
+        }
       }
     }
   });
