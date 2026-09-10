@@ -13,8 +13,8 @@ interface ControlBarProps {
   onNav: (action: 'back' | 'forward' | 'refresh') => void;
   iframeUrl: string;
   onLoadUrl: (url: string) => void;
-  isPremium: boolean;
-  onPremiumTrigger: () => void;
+  isPremium?: boolean;
+  onPremiumTrigger?: () => void;
 }
 
 const isFreeDevice = (devId: string) => {
@@ -144,21 +144,13 @@ export const ControlBar: React.FC<ControlBarProps> = ({
             {isOpen && (
               <div className="custom-dropdown-menu">
                 {filteredDevices.map(([key, cfg]) => {
-                  const free = isFreeDevice(key);
-                  const showLock = !isPremium && !free;
-                  
                   return (
                     <button
                       key={key}
-                      className={`custom-dropdown-item ${device === key ? 'active' : ''} ${showLock ? 'locked-device-item' : ''}`}
+                      className={`custom-dropdown-item ${device === key ? 'active' : ''}`}
                       onClick={() => {
-                        if (showLock) {
-                          setIsOpen(false);
-                          onPremiumTrigger();
-                        } else {
-                          setDevice(key);
-                          setIsOpen(false);
-                        }
+                        setDevice(key);
+                        setIsOpen(false);
                       }}
                     >
                       <span className="item-brand-icon">
@@ -166,11 +158,6 @@ export const ControlBar: React.FC<ControlBarProps> = ({
                       </span>
                       <span className="item-name" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         {cfg.name}
-                        {showLock && (
-                          <span className="lock-badge-icon" style={{ fontSize: '10px', opacity: 0.65 }}>
-                            🔒
-                          </span>
-                        )}
                       </span>
                       {device === key && <span className="check-indicator">✓</span>}
                     </button>
@@ -204,49 +191,6 @@ export const ControlBar: React.FC<ControlBarProps> = ({
               Android
             </button>
           </div>
-
-          {!isPremium && (
-            <button 
-              id="btn-upgrade-nav" 
-              onClick={onPremiumTrigger}
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                color: '#ffffff',
-                border: '1px solid rgba(255, 215, 0, 0.25)',
-                padding: '6px 12px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontWeight: '600',
-                fontSize: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(255, 215, 0, 0.08)';
-                e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
-                e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.25)';
-              }}
-            >
-              <svg 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="#ffd700" 
-                strokeWidth="2.5" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                style={{ width: '13px', height: '13px', flexShrink: 0 }}
-              >
-                <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/>
-                <path d="M3 20h18"/>
-              </svg>
-              Go Premium
-            </button>
-          )}
         </div>
 
         <div className="controls-right">
@@ -267,17 +211,11 @@ export const ControlBar: React.FC<ControlBarProps> = ({
               </button>
               <button 
                 className={orientation === 'landscape' ? 'active' : ''} 
-                onClick={() => {
-                  if (!isPremium) {
-                    onPremiumTrigger();
-                  } else if (orientation !== 'landscape') {
-                    onOrientationToggle();
-                  }
-                }}
-                title={isPremium ? "Landscape Orientation" : "Landscape (Premium Only)"}
+                onClick={() => orientation !== 'landscape' && onOrientationToggle()}
+                title="Landscape Orientation"
                 style={{ position: 'relative' }}
               >
-                Landscape {!isPremium && '🔒'}
+                Landscape
               </button>
             </div>
           </div>

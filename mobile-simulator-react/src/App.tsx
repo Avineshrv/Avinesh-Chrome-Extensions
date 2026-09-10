@@ -167,75 +167,11 @@ export const DEVICES_CONFIG: Record<string, DeviceConfig> = {
   }
 };
 
-const isFreeDevice = (devId: string) => {
-  return devId === 'iphone-16' || devId === 'pixel-9' || devId === 'galaxy-s24';
-};
-
-// Asymmetric Cryptographic RSA Verification Public Key
-const PUBLIC_KEY_BASE64 = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAn3iUMLAfZc81o0PqB6H0JAx2/V4cnihGtaDPYznUbdWmR2ncAHUWHU40LjhpMSoID0mjKpx5X9YNWwWPd4/j+Pcr56Zici/dOQDMQPycxYHamxTt+Uo1j4m+oep4Lt1lNV3H0ttTxfqMvhaRPYNdT8+dP/sWJtU2KXXF6pLZY6UW+1dix0tGiaTz5fz7G/NwQxmnObbG/WOSe5UA59Lvn/eBhmjtd08y2DvQW4ro6N4jwKt3lrz8MPLg3zhv5NPEkezOU4HNEYSMtZgehlwvZvv5ign+w84/Vz/7Ow+dI9gM3iT2kSiotQ5RBFOlYMcslM1bcL1nhyb3NhJjsRvVWQIDAQAB";
-
-function base64ToArrayBuffer(base64: string): ArrayBuffer {
-  const binaryString = window.atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
-  return bytes.buffer;
-}
-
-async function verifyLicense(payload: string, signatureBase64: string): Promise<boolean> {
-  try {
-    const keyData = base64ToArrayBuffer(PUBLIC_KEY_BASE64);
-    const publicKey = await window.crypto.subtle.importKey(
-      "spki",
-      keyData,
-      {
-        name: "RSASSA-PKCS1-v1_5",
-        hash: "SHA-256"
-      },
-      false,
-      ["verify"]
-    );
-
-    const encoder = new TextEncoder();
-    const data = encoder.encode(payload);
-    const signature = base64ToArrayBuffer(signatureBase64);
-
-    return await window.crypto.subtle.verify(
-      "RSASSA-PKCS1-v1_5",
-      publicKey,
-      signature,
-      data
-    );
-  } catch (err) {
-    console.error('[Verification SubtleCrypto] RSA Cryptosignature check error:', err);
-    return false;
-  }
-}
-
 export type DeviceType = keyof typeof DEVICES_CONFIG;
 type OsModeType = 'ios' | 'android';
 type OrientationType = 'portrait' | 'landscape';
 
 export const App: React.FC = () => {
-  // Gating & Licensing States
-  const [isPremium, setIsPremium] = useState<boolean>(false);
-  const [installationId, setInstallationId] = useState<string>('');
-  const [showPremiumModal, _setShowPremiumModal] = useState<boolean>(false);
-  const showPremiumModalRef = useRef<boolean>(false);
-  const setShowPremiumModal = (val: boolean) => {
-    showPremiumModalRef.current = val;
-    _setShowPremiumModal(val);
-  };
-  const [manualLicenseKey, setManualLicenseKey] = useState<string>('');
-  const [licensingError, setLicensingError] = useState<string>('');
-  const [licensingSuccess, setLicensingSuccess] = useState<boolean>(false);
-  const [checkoutLoading, setCheckoutLoading] = useState<boolean>(false);
-  
-  // Security Tampering States
-  const [isTampered, setIsTampered] = useState<boolean>(false);
-
   // Global Emulator React States
   const [device, setDevice] = useState<DeviceType>('iphone-16');
   const [osMode, setOsMode] = useState<OsModeType>('ios');
@@ -246,223 +182,10 @@ export const App: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [iframeUrl, setIframeUrl] = useState('https://www.google.com');
   const [keyboardOpen, setKeyboardOpen] = useState(false);
-  const [inputBounds, setInputBounds] = useState<any>(null);
+  const [_inputBounds, setInputBounds] = useState<any>(null);
   const [showInstructions, setShowInstructions] = useState(false);
 
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
-
-  // --- Secure License Verifier Engine ---
-  const runSecurityCheck = async () => {
-    if (typeof window === 'undefined' || !(window as any).chrome || !chrome.storage) return;
-
-    const storageArea = chrome.storage.sync ? chrome.storage.sync : chrome.storage.local;
-
-    storageArea.get(['active_license', 'installationId'], async (result: any) => {
-      let license = result.active_license;
-      let installId = result.installationId;
-
-      if (!license || !installId) {
-        // Fallback to local
-        chrome.storage.local.get(['active_license', 'installationId'], async (localResult: any) => {
-          license = localResult.active_license;
-          installId = localResult.installationId;
-
-          if (installId) {
-            setInstallationId(installId);
-          }
-
-          if (!license || !license.payload || !license.signature || !installId) {
-            setIsPremium(false);
-            setDevice((prev) => isFreeDevice(prev) ? prev : 'iphone-16');
-            setOrientation('portrait');
-            return;
-          }
-
-          // Auto-migrate local storage settings to Chrome Profile Sync
-          if (chrome.storage.sync) {
-            chrome.storage.sync.set({ active_license: license, installationId: installId });
-          }
-
-          verifyAndProcess(license, installId);
-        });
-      } else {
-        if (installId) {
-          setInstallationId(installId);
-        }
-        verifyAndProcess(license, installId);
-      }
-
-      async function verifyAndProcess(lic: any, instId: string) {
-        if (!lic || !lic.payload || !lic.signature || !instId) {
-          setIsPremium(false);
-          setDevice((prev) => isFreeDevice(prev) ? prev : 'iphone-16');
-          setOrientation('portrait');
-          return;
-        }
-
-        // Cryptographically verify RSA-SHA256 signature
-        const isVerified = await verifyLicense(lic.payload, lic.signature);
-        if (!isVerified) {
-          console.warn('[App Security Shield] Cryptographic signature mismatch! Premium denied.');
-          setIsPremium(false);
-          return;
-        }
-
-        try {
-          const parsedPayload = JSON.parse(lic.payload);
-          if (parsedPayload.installationId !== instId) {
-            console.warn('[App Security Shield] Installation ID mismatch! Premium denied.');
-            setIsPremium(false);
-            return;
-          }
-
-          if (parsedPayload.status === 'premium') {
-            setIsPremium(true);
-            setShowPremiumModal(false);
-          } else {
-            setIsPremium(false);
-          }
-        } catch (err) {
-          console.error('[App Security Shield] License payload JSON error:', err);
-          setIsPremium(false);
-        }
-      }
-    });
-  };
-
-  // 1. Startup secure boot
-  useEffect(() => {
-    runSecurityCheck();
-    
-    // Periodically re-verify license integrity
-    const verifierInterval = setInterval(() => {
-      runSecurityCheck();
-    }, 2500);
-
-    return () => clearInterval(verifierInterval);
-  }, []);
-
-  // 2. DOM MutationObserver - Anti-Inspect Element Blocker Bypass Defense
-  useEffect(() => {
-    if (isPremium) return; // Only watch in free tier
-
-    const targetNode = document.body;
-    const config = { childList: true, subtree: true, attributes: true };
-
-    const observerCallback = (mutationsList: MutationRecord[]) => {
-      for (const mutation of mutationsList) {
-        // 1. Detect deletion/removal of the blocker modal
-        if (mutation.type === 'childList') {
-          for (let i = 0; i < mutation.removedNodes.length; i++) {
-            const node = mutation.removedNodes[i];
-            if (node.nodeType === Node.ELEMENT_NODE) {
-              const el = node as HTMLElement;
-              if (el.id === 'premium-modal-overlay' || el.querySelector('#premium-modal-overlay')) {
-                // If it was removed but showPremiumModalRef says it should be open, it is tampering
-                if (showPremiumModalRef.current) {
-                  console.error('[Security Shield] VIOLATION DETECTED: Premium blocker modal was deleted!');
-                  setIsTampered(true);
-                  return;
-                }
-              }
-            }
-          }
-        }
-
-        // 2. Detect style/visibility tampering (hiding the blocker)
-        if (
-          mutation.type === 'attributes' && 
-          (mutation.attributeName === 'style' || mutation.attributeName === 'class') &&
-          mutation.target instanceof HTMLElement
-        ) {
-          const targetEl = mutation.target as HTMLElement;
-          if (targetEl.id === 'premium-modal-overlay' || targetEl.closest('#premium-modal-overlay')) {
-            if (showPremiumModalRef.current) {
-              const style = window.getComputedStyle(targetEl);
-              if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) {
-                console.error('[Security Shield] VIOLATION DETECTED: Premium blocker visibility bypass attempted!');
-                setIsTampered(true);
-                return;
-              }
-            }
-          }
-        }
-      }
-    };
-
-    const observer = new MutationObserver(observerCallback);
-    observer.observe(targetNode, config);
-
-    return () => observer.disconnect();
-  }, [isPremium]);
-
-  // 3. lemonsqueezy success redirects message listeners
-  useEffect(() => {
-    const handleSuccessPing = (event: MessageEvent) => {
-      if (event.data && event.data.type === 'MOBILE_EMULATOR_PAYMENT_SUCCESS') {
-        const { license } = event.data;
-        if (license && license.payload && license.signature) {
-          if (typeof window !== 'undefined' && (window as any).chrome && chrome.runtime && chrome.runtime.sendMessage) {
-            chrome.runtime.sendMessage({ type: 'PAYMENT_COMPLETED', license }, (response: any) => {
-              console.log('[App UI] Extension successfully activated license:', response);
-              setIsPremium(true);
-              setLicensingSuccess(true);
-              setShowPremiumModal(false);
-              runSecurityCheck();
-            });
-          }
-        }
-      }
-    };
-
-    window.addEventListener('message', handleSuccessPing);
-    return () => window.removeEventListener('message', handleSuccessPing);
-  }, []);
-
-  // 4. Synchronize extension messaging for storage updates
-  useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).chrome && chrome.storage && chrome.storage.onChanged) {
-      const handleStorageChange = (changes: any, areaName: string) => {
-        if ((areaName === 'local' || areaName === 'sync') && changes.active_license) {
-          runSecurityCheck();
-        }
-      };
-      chrome.storage.onChanged.addListener(handleStorageChange);
-      return () => chrome.storage.onChanged.removeListener(handleStorageChange);
-    }
-  }, []);
-
-  // 5. Secure REST Server Polling auto-activator
-  useEffect(() => {
-    if (isPremium || !installationId) return;
-
-    const pollInterval = setInterval(async () => {
-      try {
-        const response = await fetch(`http://localhost:3000/check-license?installationId=${installationId}`);
-        const data = await response.json();
-        
-        if (data && data.premium && data.license) {
-          console.log('[Licensing Poller] Premium payment confirmed! Activating extension...');
-          
-          if (typeof window !== 'undefined' && (window as any).chrome && chrome.storage) {
-            const storageArea = chrome.storage.sync ? chrome.storage.sync : chrome.storage.local;
-            storageArea.set({ active_license: data.license }, () => {
-              chrome.storage.local.set({ active_license: data.license }, () => {
-                setIsPremium(true);
-                setLicensingSuccess(true);
-                clearInterval(pollInterval);
-                runSecurityCheck();
-              });
-            });
-          }
-        }
-      } catch (err) {
-        // Silent block
-      }
-    }, 2500);
-
-    return () => clearInterval(pollInterval);
-  }, [isPremium, installationId]);
 
   // --- DNR Emulation & Body Class Syncing ---
   useEffect(() => {
@@ -481,8 +204,8 @@ export const App: React.FC = () => {
   }, [osMode]);
 
   useEffect(() => {
-    document.body.className = `${osMode}-mode ${keyboardOpen ? 'keyboard-open' : ''} ${!isPremium ? 'free-user-active' : 'premium-active'}`;
-  }, [osMode, keyboardOpen, isPremium]);
+    document.body.className = `${osMode}-mode ${keyboardOpen ? 'keyboard-open' : ''} premium-active`;
+  }, [osMode, keyboardOpen]);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && (window as any).chrome && chrome.tabs && chrome.tabs.query) {
@@ -557,13 +280,11 @@ export const App: React.FC = () => {
 
   // --- Communication with frame ---
   const sendInputToFrame = (data: { char?: string | null; action?: string }) => {
-    if (isPremium) {
-      if (iframeRef.current?.contentWindow) {
-        iframeRef.current.contentWindow.postMessage({
-          type: 'KEYBOARD_INPUT',
-          ...data
-        }, '*');
-      }
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({
+        type: 'KEYBOARD_INPUT',
+        ...data
+      }, '*');
     }
   };
 
@@ -668,10 +389,6 @@ export const App: React.FC = () => {
   };
 
   const handleOrientationToggle = () => {
-    if (!isPremium) {
-      handlePremiumTrigger();
-      return;
-    }
     setOrientation(prev => prev === 'portrait' ? 'landscape' : 'portrait');
     setKeyboardOpen(false);
   };
@@ -695,11 +412,6 @@ export const App: React.FC = () => {
   };
 
   const handleDeviceChange = (dev: DeviceType) => {
-    if (!isFreeDevice(dev) && !isPremium) {
-      handlePremiumTrigger();
-      return;
-    }
-
     setDevice(dev);
     const config = DEVICES_CONFIG[dev];
     if (config) {
@@ -718,120 +430,16 @@ export const App: React.FC = () => {
       setOsMode('ios');
       const currentConfig = DEVICES_CONFIG[device];
       if (currentConfig && currentConfig.os !== 'ios') {
-        setDevice(isPremium ? 'iphone-16-pro' : 'iphone-16');
+        setDevice('iphone-16-pro');
       }
     } else if (filter === 'android') {
       setOsMode('android');
       const currentConfig = DEVICES_CONFIG[device];
       if (currentConfig && currentConfig.os !== 'android') {
-        setDevice(isPremium ? 'galaxy-s24-ultra' : 'galaxy-s24');
+        setDevice('galaxy-s24-ultra');
       }
     }
   };
-
-  const handlePremiumTrigger = () => {
-    setLicensingError('');
-    setLicensingSuccess(false);
-    setShowPremiumModal(true);
-  };
-
-  const handleLemonSqueezyUpgrade = async () => {
-    setCheckoutLoading(true);
-    setLicensingError('');
-    try {
-      const response = await fetch('http://localhost:3000/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ installationId })
-      });
-      const data = await response.json();
-      if (data.url) {
-        if (typeof window !== 'undefined' && (window as any).chrome && chrome.tabs && chrome.tabs.create) {
-          chrome.tabs.create({ url: data.url });
-        } else {
-          window.open(data.url, '_blank');
-        }
-      } else {
-        setLicensingError('Failed to generate Lemon Squeezy checkout session.');
-      }
-    } catch (err: any) {
-      setLicensingError('Licensing server connection offline. Please start Node server.js on Port 3000.');
-    } finally {
-      setCheckoutLoading(false);
-    }
-  };
-
-  const handleManualActivate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLicensingError('');
-    setLicensingSuccess(false);
-    
-    if (!manualLicenseKey.trim()) {
-      setLicensingError('Please enter a license key.');
-      return;
-    }
-
-    try {
-      const keyObj = JSON.parse(manualLicenseKey.trim());
-      if (!keyObj.payload || !keyObj.signature) {
-        setLicensingError('Invalid license key format.');
-        return;
-      }
-
-      const verified = await verifyLicense(keyObj.payload, keyObj.signature);
-      if (!verified) {
-        setLicensingError('Signature verification failed!');
-        return;
-      }
-
-      const payload = JSON.parse(keyObj.payload);
-      if (payload.installationId !== installationId) {
-        setLicensingError('License belongs to another installation ID!');
-        return;
-      }
-
-      if (payload.status === 'premium') {
-        if (typeof window !== 'undefined' && (window as any).chrome && chrome.storage) {
-          const storageArea = chrome.storage.sync ? chrome.storage.sync : chrome.storage.local;
-          storageArea.set({ active_license: keyObj }, () => {
-            chrome.storage.local.set({ active_license: keyObj }, () => {
-              setIsPremium(true);
-              setLicensingSuccess(true);
-              setShowPremiumModal(false);
-              runSecurityCheck();
-            });
-          });
-        }
-      } else {
-        setLicensingError('License status is inactive.');
-      }
-    } catch (err: any) {
-      setLicensingError('Failed to parse license key: ' + err.message);
-    }
-  };
-
-  if (isTampered) {
-    return (
-      <div id="security-lockdown-container">
-        <div className="lockdown-badge">🛑 SECURITY THREAT</div>
-        <h1 className="lockdown-title">System Tampering Detected</h1>
-        <p className="lockdown-text">
-          Our security shield detected that critical DOM blocker structures or styles were deleted or modified using DevTools. 
-          To protect the licensing integrity, the application has been locked down.
-        </p>
-        <div className="lockdown-details">
-          <span>Shield status: LOCKDOWN</span>
-          <span>System: Avinesh-Chrome-Extensions</span>
-          <span>Security Integrity: COMPROMISED</span>
-        </div>
-        <p className="lockdown-footer">
-          Bypassing is blocked. Please restart the extension side panel to restore the simulator.
-        </p>
-      </div>
-    );
-  }
 
   const config = DEVICES_CONFIG[device] || DEVICES_CONFIG['iphone-16'];
   const actualW = orientation === 'portrait' ? config.width : config.height;
@@ -840,7 +448,7 @@ export const App: React.FC = () => {
   const outerH = actualH + (config.bezel * 2);
 
   return (
-    <div id="app-container" className={!isPremium ? 'free-mode' : 'premium-mode'}>
+    <div id="app-container" className="premium-mode">
       {/* Control Bar Controls */}
       <ControlBar
         device={device}
@@ -855,8 +463,6 @@ export const App: React.FC = () => {
         onNav={sendNavToFrame}
         iframeUrl={iframeUrl}
         onLoadUrl={handleLoadUrl}
-        isPremium={isPremium}
-        onPremiumTrigger={handlePremiumTrigger}
       />
 
       {/* Main Device Workspace */}
@@ -914,7 +520,7 @@ export const App: React.FC = () => {
                   onRecents={handleSoftRecents}
                 />
 
-                {/* Virtual Keyboard engine - pops up dynamically but blank in free tier */}
+                {/* Virtual Keyboard engine */}
                 <VirtualKeyboard
                   osMode={osMode}
                   keyboardPage={keyboardPage}
@@ -924,8 +530,6 @@ export const App: React.FC = () => {
                   keyboardOpen={keyboardOpen}
                   onClose={handleCloseKeyboard}
                   sendInputToFrame={sendInputToFrame}
-                  isPremium={isPremium}
-                  onPremiumTrigger={handlePremiumTrigger}
                 />
               </div>
             </div>
@@ -943,81 +547,8 @@ export const App: React.FC = () => {
           >
             {isConnected ? 'Connected' : 'Connecting...'}
           </span>
-          <span className="premium-badge-status" style={{ marginLeft: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px', verticalAlign: 'middle' }}>
-            {isPremium ? (
-              <>
-                <svg 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="#ffd700" 
-                  strokeWidth="2.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  style={{ width: '15px', height: '15px', color: '#ffd700', flexShrink: 0 }}
-                >
-                  <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/>
-                  <path d="M3 20h18"/>
-                </svg>
-                <span style={{ color: '#ffd700', fontWeight: '800', letterSpacing: '0.4px', fontSize: '11px' }}>PREMIUM UNLOCKED</span>
-              </>
-            ) : (
-              <>
-                <svg 
-                  viewBox="0 0 640 640" 
-                  fill="#ffd700" 
-                  style={{ width: '14px', height: '14px', flexShrink: 0 }}
-                >
-                  <path d="M256 160L256 224L384 224L384 160C384 124.7 355.3 96 320 96C284.7 96 256 124.7 256 160zM192 224L192 160C192 89.3 249.3 32 320 32C390.7 32 448 89.3 448 160L448 224C483.3 224 512 252.7 512 288L512 512C512 547.3 483.3 576 448 576L192 576C156.7 576 128 547.3 128 512L128 288C128 252.7 156.7 224 192 224z"/>
-                </svg>
-                <span style={{ color: '#ffd700', fontWeight: '800', letterSpacing: '0.4px', fontSize: '11px' }}>FREE TIER</span>
-              </>
-            )}
-          </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          {!isPremium && (
-            <button 
-              id="btn-trigger-payment-diag"
-              onClick={handlePremiumTrigger}
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.06)',
-                color: '#ffffff',
-                border: '1px solid rgba(255, 215, 0, 0.25)',
-                padding: '4px 10px',
-                borderRadius: '4px',
-                fontSize: '11px',
-                cursor: 'pointer',
-                fontWeight: '600',
-                marginRight: '8px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '5px',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(255, 215, 0, 0.08)';
-                e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.5)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.06)';
-                e.currentTarget.style.borderColor = 'rgba(255, 215, 0, 0.25)';
-              }}
-            >
-              <svg 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="#ffd700" 
-                strokeWidth="2.5" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                style={{ width: '12px', height: '12px', flexShrink: 0 }}
-              >
-                <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/>
-                <path d="M3 20h18"/>
-              </svg>
-              Upgrade for $5
-            </button>
-          )}
           <button 
             id="btn-instructions" 
             onClick={() => setShowInstructions(true)}
@@ -1048,97 +579,6 @@ export const App: React.FC = () => {
           <span className="bottom-creator-text">Made by Avinesh</span>
         </a>
       </div>
-
-      {/* Modern Glassmorphic Premium Upgrade Modal Blocker Overlay */}
-      {showPremiumModal && (
-        <div id="premium-modal-overlay">
-          <div className="premium-modal">
-            <button className="premium-modal-close" onClick={() => setShowPremiumModal(false)}>&times;</button>
-            
-            <div className="premium-modal-header">
-              <div className="premium-medal" style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
-                <svg 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="#ffd700" 
-                  strokeWidth="2.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  style={{ width: '44px', height: '44px', filter: 'drop-shadow(0 2px 8px rgba(255, 215, 0, 0.4))' }}
-                >
-                  <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/>
-                  <path d="M3 20h18"/>
-                </svg>
-              </div>
-              <h2 className="premium-modal-title">Upgrade to Premium</h2>
-              <p className="premium-modal-subtitle">One-time payment of $5.00 • Lifetime access</p>
-            </div>
-
-            <div className="premium-modal-body">
-              <ul className="premium-features-grid">
-                <li>
-                  <span className="feat-icon">🌐</span>
-                  <div>
-                    <strong>Interactive Virtual Keyboard</strong>
-                    <p>Unlock alphanumeric keys typing, predictor engines, and special characters.</p>
-                  </div>
-                </li>
-                <li>
-                  <span className="feat-icon">📱</span>
-                  <div>
-                    <strong>10+ Flagship Devices</strong>
-                    <p>Simulate iPhone 16 Pro Max, Pixel 9 Pro XL, Galaxy S24 Ultra, and more.</p>
-                  </div>
-                </li>
-                <li>
-                  <span className="feat-icon">🔄</span>
-                  <div>
-                    <strong>Landscape Rotation</strong>
-                    <p>Rotate devices naturally with auto-fitting punches, notches, and safe areas.</p>
-                  </div>
-                </li>
-                <li>
-                  <span className="feat-icon">🍋</span>
-                  <div>
-                    <strong>Custom Keyboard Accessories</strong>
-                    <p>Unlock custom dark/night themes, dictation microphones, and full emoji panels.</p>
-                  </div>
-                </li>
-              </ul>
-
-              {licensingError && <div className="licensing-error-alert">{licensingError}</div>}
-              {licensingSuccess && <div className="licensing-success-alert">Success! Premium plan activated.</div>}
-
-              <button 
-                className="premium-btn-stripe" 
-                onClick={handleLemonSqueezyUpgrade}
-                disabled={checkoutLoading}
-                style={{ background: 'linear-gradient(135deg, #70c050 0%, #5ba33f 100%)', boxShadow: '0 4px 15px rgba(112, 192, 80, 0.35)' }}
-              >
-                {checkoutLoading ? 'Launching Checkout...' : 'Upgrade with Lemon Squeezy ($5.00)'}
-              </button>
-
-              <div className="manual-key-accordion">
-                <details>
-                  <summary>Already purchased? Activate manual license key</summary>
-                  <form onSubmit={handleManualActivate} style={{ marginTop: '10px' }}>
-                    <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                      Your unique installation ID: <code>{installationId}</code>
-                    </p>
-                    <textarea
-                      className="manual-license-input"
-                      placeholder="Paste your signed JSON license key object here..."
-                      value={manualLicenseKey}
-                      onChange={(e) => setManualLicenseKey(e.target.value)}
-                    ></textarea>
-                    <button type="submit" className="manual-activate-btn">Activate Key</button>
-                  </form>
-                </details>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {showInstructions && (
         <div className="instructions-overlay" onClick={() => setShowInstructions(false)}>
